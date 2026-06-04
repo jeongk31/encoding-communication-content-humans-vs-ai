@@ -1,0 +1,58 @@
+\begin{table}[ht]
+\centering
+\caption{Replication of paper results across coding sources.}
+\label{tab:cross-study-replication}
+\small
+\begin{threeparttable}
+\renewcommand\TPTminimum{\linewidth}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l@{\hskip 24pt} c@{\hskip 10pt}c @{\hskip 24pt} c@{\hskip 10pt}c @{\hskip 24pt} c@{\hskip 10pt}c}
+\toprule
+\textbf{Outcome} & \multicolumn{2}{c}{\textbf{Original RA}} & \multicolumn{2}{c}{\textbf{New RA}} & \multicolumn{2}{c}{\textbf{LLM Guidance}} \\
+\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2pt}r{2pt}){4-5} \cmidrule(l){6-7}
+\midrule
+\addlinespace[4pt]
+\multicolumn{7}{l}{\textit{Panel A: Legitimacy (\cite{BCW_MS_2014})}} \\
+\addlinespace[4pt]
+ & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} \\
+\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2pt}r{2pt}){4-5} \cmidrule(l){6-7}
+\addlinespace[3pt]
+Elected Leader (DV: 1e, 2) & \multicolumn{1}{c}{0.327} & \multicolumn{1}{c}{\(p=0.004\)} & \multicolumn{1}{c}{0.331} & \multicolumn{1}{c}{\(p=0.030\)} & \multicolumn{1}{c}{0.319} & \multicolumn{1}{c}{\(p=0.006\)} \\
+Elected Leader (DV: All relevant) & \multicolumn{1}{c}{0.158} & \multicolumn{1}{c}{\(p=0.050\)} & \multicolumn{1}{c}{0.166} & \multicolumn{1}{c}{\(p=0.037\)} & \multicolumn{1}{c}{0.152} & \multicolumn{1}{c}{\(p=0.058\)} \\
+\addlinespace[10pt]
+\addlinespace[4pt]
+\multicolumn{7}{l}{\textit{Panel B: Promises (\cite{CD_Ecta_2006})}} \\
+\addlinespace[4pt]
+ & \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)-value} \\
+\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2pt}r{2pt}){4-5} \cmidrule(l){6-7}
+\addlinespace[3pt]
+A's In Rate (P vs.\ NP) & \multicolumn{1}{c}{79\% vs.\ 37\%} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{71\% vs.\ 42\%} & \multicolumn{1}{c}{\(p=0.003\)} & \multicolumn{1}{c}{76\% vs.\ 38\%} & \multicolumn{1}{c}{\(p{<}0.001\)} \\
+B's Roll Rate (P vs.\ NP) & \multicolumn{1}{c}{79\% vs.\ 33\%} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{75\% vs.\ 31\%} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{78\% vs.\ 30\%} & \multicolumn{1}{c}{\(p{<}0.001\)} \\
+(In, Roll) (P vs.\ NP) & \multicolumn{1}{c}{62\% vs.\ 14\%} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{55\% vs.\ 17\%} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{61\% vs.\ 13\%} & \multicolumn{1}{c}{\(p{<}0.001\)} \\
+\addlinespace[10pt]
+\midrule
+\addlinespace[4pt]
+\multicolumn{7}{l}{\textit{Panel C: Timing (\cite{BH_JEP_2023})}} \\
+\addlinespace[4pt]
+ & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} \\
+\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2pt}r{2pt}){4-5} \cmidrule(l){6-7}
+\addlinespace[3pt]
+MWC \(\times\) Proposer & \multicolumn{1}{c}{0.175} & \multicolumn{1}{c}{\(p=0.014\)} & \multicolumn{1}{c}{0.221} & \multicolumn{1}{c}{\(p=0.007\)} & \multicolumn{1}{c}{0.227} & \multicolumn{1}{c}{\(p=0.004\)} \\
+MWC \(\times\) Voter & \multicolumn{1}{c}{0.148} & \multicolumn{1}{c}{\(p=0.036\)} & \multicolumn{1}{c}{0.084} & \multicolumn{1}{c}{\(p=0.381\)} & \multicolumn{1}{c}{0.159} & \multicolumn{1}{c}{\(p=0.043\)} \\
+3-Way Split \(\times\) Proposer & \multicolumn{1}{c}{-0.625} & \multicolumn{1}{c}{\(p{<}0.001\)} & \multicolumn{1}{c}{-0.572} & \multicolumn{1}{c}{\(p=0.004\)} & \multicolumn{1}{c}{-0.419} & \multicolumn{1}{c}{\(p=0.015\)} \\
+3-Way Split \(\times\) Voter & \multicolumn{1}{c}{-0.090} & \multicolumn{1}{c}{\(p=0.182\)} & \multicolumn{1}{c}{-0.091} & \multicolumn{1}{c}{\(p=0.131\)} & \multicolumn{1}{c}{-0.105} & \multicolumn{1}{c}{\(p=0.181\)} \\
+Competition \(\times\) Proposer & \multicolumn{1}{c}{0.010} & \multicolumn{1}{c}{\(p=0.861\)} & \multicolumn{1}{c}{0.180} & \multicolumn{1}{c}{\(p=0.012\)} & \multicolumn{1}{c}{0.112} & \multicolumn{1}{c}{\(p=0.251\)} \\
+Competition \(\times\) Voter & \multicolumn{1}{c}{0.052} & \multicolumn{1}{c}{\(p=0.403\)} & \multicolumn{1}{c}{-0.198} & \multicolumn{1}{c}{\(p=0.008\)} & \multicolumn{1}{c}{-0.143} & \multicolumn{1}{c}{\(p=0.003\)} \\
+Future Coalition \(\times\) Voter & \multicolumn{1}{c}{0.008} & \multicolumn{1}{c}{\(p=0.816\)} & \multicolumn{1}{c}{0.056} & \multicolumn{1}{c}{\(p=0.326\)} & \multicolumn{1}{c}{0.065} & \multicolumn{1}{c}{\(p=0.367\)} \\
+\bottomrule
+\end{tabular}
+}
+\vspace{8pt}
+\begin{tablenotes}[flushleft]\footnotesize
+\setlength{\itemsep}{6pt}
+\item \textbf{Panel B (Promises):} \textit{Proportion} = rate of the outcome among Promise-coded vs.\ No-Promise-coded episodes. \(p\)-value is from a one-tailed two-proportion \(z\)-test. For Promises the LLM column uses the Base prompt, as no guidance variant exists for this study.
+\item \textbf{Panel A (Legitimacy):} The \(p\)-value is the two-tailed \(p\)-value on Elected Leader in the 2SLS regression of Models 3 and 4 of Table 6 (the two rows differ only in the dependent variable).
+\item \textbf{Panel C (Timing):} The \(p\)-value is the two-tailed \(p\)-value on the row's independent variable in the OLS regression of the MWC-outcome indicator corresponding to the analysis behind Figure 5 of \cite{BH_JEP_2023}.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

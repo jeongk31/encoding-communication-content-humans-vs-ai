@@ -1,0 +1,16 @@
+# LLM Coding Replication - Dependencies (NO EXAMPLES VERSION)
+# Legitimacy, Communication, and Leadership in the Turnaround Game
+
+# Core dependencies
+pandas>=2.0.0
+python-dotenv>=1.0.0
+openpyxl>=3.1.0
+
+# LLM APIs
+openai>=1.0.0
+google-generativeai>=0.3.0
+requests>=2.31.0
+
+# Optional: for Stata file support
+# Note: May require additional system dependencies
+# statsmodels>=0.14.0

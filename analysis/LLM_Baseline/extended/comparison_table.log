@@ -1,0 +1,1459 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/thet/Desktop/RA_SSEL_2025-26/Projects/SSEL_LLM/GITHUB/analy
+> sis/LLM_Baseline/extended/comparison_table.log
+  log type:  text
+ opened on:   4 Jun 2026, 16:47:28
+
+. 
+. * ===========================================================================
+. * LOAD ONCE
+. * ===========================================================================
+. import delimited "../../../data/master_dataset.csv", clear stringcols(_all)
+(encoding automatically selected: ISO-8859-2)
+(34 vars, 590,359 obs)
+
+. destring label, replace force
+label: all characters numeric; replaced as byte
+
+. tempfile master
+
+. save `master'
+file /tmp/claude-501/St22926.000001 saved as .dta format
+
+. 
+. * ===========================================================================
+. * OPEN OUTPUT FILE
+. * ===========================================================================
+. tempname fh
+
+. file open `fh' using "comparison_table.tex", write replace
+
+. 
+. file write `fh' "\begin{table}[ht]" _n
+
+. file write `fh' "\centering" _n
+
+. file write `fh' "\caption{Replication of paper results across coding sources.
+> }" _n
+
+. file write `fh' "\label{tab:cross-study-replication}" _n
+
+. file write `fh' "\small" _n
+
+. file write `fh' "\begin{threeparttable}" _n
+
+. file write `fh' "\renewcommand\TPTminimum{\linewidth}" _n
+
+. file write `fh' "\resizebox{\textwidth}{!}{%" _n
+
+. file write `fh' "\begin{tabular}{l@{\hskip 24pt} c@{\hskip 10pt}c @{\hskip 24
+> pt} c@{\hskip 10pt}c @{\hskip 24pt} c@{\hskip 10pt}c}" _n
+
+. file write `fh' "\toprule" _n
+
+. file write `fh' "\textbf{Outcome} & \multicolumn{2}{c}{\textbf{Original RA}} 
+> & \multicolumn{2}{c}{\textbf{New RA}} & \multicolumn{2}{c}{\textbf{LLM Baseli
+> ne}} \\" _n
+
+. file write `fh' "\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2
+> pt}r{2pt}){4-5} \cmidrule(l){6-7}" _n
+
+. 
+. 
+. 
+. * ===========================================================================
+. * SHARED UTILITY PROGRAMS (used by Panels A & B)
+. * ===========================================================================
+. capture program drop pcell
+
+. program define pcell, rclass
+  1.     args pval
+  2.     if `pval' < 0.001 {
+  3.         return local cell "\(p{<}0.001\)"
+  4.     }
+  5.     else {
+  6.         local pf : display %5.3f `pval'
+  7.         return local cell "\(p=`pf'\)"
+  8.     }
+  9. end
+
+. 
+. 
+. capture program drop coefcell
+
+. program define coefcell, rclass
+  1.     args b
+  2.     local bf : display %6.3f `b'
+  3.     local bf = trim("`bf'")
+  4.     return local cell "`bf'"
+  5. end
+
+. 
+. * ===========================================================================
+. * PANEL A: LEGITIMACY (Models 3 and 4 of Table 6, 2SLS; only Elected reported
+> )
+. * ===========================================================================
+. * All experimental variables (elected, bonus_increase, lag_min_effort, instru
+> ments,
+. * manager controls, global_group) come from master enriched columns.
+. 
+. use `master', clear
+
+. keep if study == "Legitimacy"
+(331,903 observations deleted)
+
+. destring label, replace force
+label already numeric; no replace
+
+. 
+. * Episode_ID = "session_period_chatGroup" — parse into separate vars
+. split episode_id, parse("_") destring gen(eid_)
+variables born as string: 
+eid_1  eid_2  eid_3
+eid_1: all characters numeric; replaced as byte
+eid_2: all characters numeric; replaced as byte
+eid_3: all characters numeric; replaced as byte
+
+. rename eid_1 session
+
+. rename eid_2 period
+
+. rename eid_3 chatGroup
+
+. destring bonus_increase global_group lag_min_effort iv_max_min46 iv_avg_min16
+>  ///
+>          elected stage1_correct manearlyeff, replace force
+bonus_increase: all characters numeric; replaced as byte
+global_group: all characters numeric; replaced as int
+lag_min_effort: all characters numeric; replaced as byte
+iv_max_min46: all characters numeric; replaced as byte
+iv_avg_min16: all characters numeric; replaced as double
+elected: all characters numeric; replaced as byte
+stage1_correct: all characters numeric; replaced as byte
+manearlyeff: all characters numeric; replaced as double
+
+. 
+. * Period dummies (period takes values 7-9 in the regression sample)
+. gen pdum2 = (period == 8)
+
+. gen pdum3 = (period == 9)
+
+. 
+. * Original RA DV: paper's averaged codings = mean of H2 (cd1) and H3 (cd2) pe
+> r (Episode, Category).
+. * Then sum binary indicators for cat 1e and cat 2 — but Original RA uses CONT
+> INUOUS sum (0..2).
+. preserve
+
+.     keep if (coder_type == "Human" & inlist(encoder, "H2", "H3") & inlist(cat
+> egory, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
+(256,950 observations deleted)
+
+.     collapse (mean) label, by(episode_id category)  // continuous (0, 0.5, 1)
+
+.     keep episode_id category label
+
+.     reshape wide label, i(episode_id) j(category) string
+(j = 1e 2)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations              784   ->   392         
+Number of variables                   3   ->   3           
+j variable (2 values)          category   ->   (dropped)
+xij variables:
+                                  label   ->   label1e label2
+-----------------------------------------------------------------------------
+
+.     gen orig_dv = label1e + label2
+
+.     keep episode_id orig_dv
+
+.     tempfile origDV
+
+.     save `origDV'
+file /tmp/claude-501/St22926.000003 saved as .dta format
+
+. restore
+
+. 
+. * New RA DV: median of H1, H4, H5
+. preserve
+
+.     keep if (coder_type == "Human" & inlist(encoder, "H1", "H4", "H5") & inli
+> st(category, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
+(256,228 observations deleted)
+
+.     collapse (median) label, by(episode_id category)
+
+.     gen maj = (label >= 0.5)
+
+.     keep episode_id category maj
+
+.     reshape wide maj, i(episode_id) j(category) string
+(j = 1e 2)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations              784   ->   392         
+Number of variables                   3   ->   3           
+j variable (2 values)          category   ->   (dropped)
+xij variables:
+                                    maj   ->   maj1e maj2
+-----------------------------------------------------------------------------
+
+.     gen new_dv = maj1e + maj2
+
+.     keep episode_id new_dv
+
+.     tempfile newDV
+
+.     save `newDV'
+file /tmp/claude-501/St22926.000005 saved as .dta format
+
+. restore
+
+. 
+. * LLM Base DV: hierarchical median (within-LLM across runs, then across LLMs)
+. preserve
+
+.     keep if (coder_type == "LLM" & llm_version == "Base" & inlist(category, "
+> 1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
+(247,564 observations deleted)
+
+.     collapse (median) label, by(episode_id category encoder)   // step 1: acr
+> oss 5 runs
+
+.     collapse (median) label, by(episode_id category)            // step 2: ac
+> ross 3 LLMs
+
+.     gen maj = (label >= 0.5)
+
+.     keep episode_id category maj
+
+.     reshape wide maj, i(episode_id) j(category) string
+(j = 1e 2)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations              784   ->   392         
+Number of variables                   3   ->   3           
+j variable (2 values)          category   ->   (dropped)
+xij variables:
+                                    maj   ->   maj1e maj2
+-----------------------------------------------------------------------------
+
+.     gen llm_dv = maj1e + maj2
+
+.     keep episode_id llm_dv
+
+.     tempfile llmDV
+
+.     save `llmDV'
+file /tmp/claude-501/St22926.000007 saved as .dta format
+
+. restore
+
+. 
+. * --- "All-relevant" DVs (Model 4): 1 if any of categories 1a-1f, 2, 3, 4, 5 
+> was coded ---
+. * Original RA DV-All (mean of H2/H3 across non-banter categories, max across 
+> cats)
+. preserve
+
+.     keep if (coder_type == "Human" & inlist(encoder, "H2", "H3") & category !
+> = "6") ///
+>          | (is_encoded == "0" & category != "6")
+(250,926 observations deleted)
+
+.     collapse (mean) label, by(episode_id category)
+
+.     collapse (max) label, by(episode_id)
+
+.     gen orig_dv_all = (label > 0)
+
+.     keep episode_id orig_dv_all
+
+.     tempfile origDVall
+
+.     save `origDVall'
+file /tmp/claude-501/St22926.000009 saved as .dta format
+
+. restore
+
+. 
+. * New RA DV-All (H1/H4/H5 majority, any non-banter category mentioned)
+. preserve
+
+.     keep if (coder_type == "Human" & inlist(encoder, "H1", "H4", "H5") & cate
+> gory != "6") ///
+>          | (is_encoded == "0" & category != "6")
+(247,316 observations deleted)
+
+.     collapse (median) label, by(episode_id category)
+
+.     gen maj = (label >= 0.5)
+
+.     collapse (max) maj, by(episode_id)
+
+.     rename maj new_dv_all
+
+.     keep episode_id new_dv_all
+
+.     tempfile newDVall
+
+.     save `newDVall'
+file /tmp/claude-501/St22926.00000b saved as .dta format
+
+. restore
+
+. 
+. * LLM Base DV-All (hierarchical median, any non-banter category mentioned)
+. preserve
+
+.     keep if (coder_type == "LLM" & llm_version == "Base" & category != "6") /
+> //
+>          | (is_encoded == "0" & category != "6")
+(203,996 observations deleted)
+
+.     collapse (median) label, by(episode_id category encoder)
+
+.     collapse (median) label, by(episode_id category)
+
+.     gen maj = (label >= 0.5)
+
+.     collapse (max) maj, by(episode_id)
+
+.     rename maj llm_dv_all
+
+.     keep episode_id llm_dv_all
+
+.     tempfile llmDVall
+
+.     save `llmDVall'
+file /tmp/claude-501/St22926.00000d saved as .dta format
+
+. restore
+
+. 
+. * Build the analysis dataset: one row per (Episode_ID), periods 7-9 only
+. keep episode_id session period chatGroup ///
+>      elected bonus_increase stage1_correct manearlyeff ///
+>      lag_min_effort iv_max_min46 iv_avg_min16 global_group pdum2 pdum3
+
+. duplicates drop episode_id, force
+
+Duplicates in terms of episode_id
+
+(258,064 observations deleted)
+
+. keep if period >= 7 & period <= 9
+(272 observations deleted)
+
+. 
+. merge 1:1 episode_id using `origDV',    nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           272
+        from master                         0  
+        from using                        272  
+
+    Matched                               120  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `newDV',     nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               392  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `llmDV',     nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               392  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `origDVall', nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               392  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `newDVall',  nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               392  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `llmDVall',  nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               392  
+    -----------------------------------------
+
+. * Skeleton rows (is_encoded == "0") were included above; no fillna needed.
+. 
+. * --- Model 3: basic DV (1{1e} + 1{2}), no manager controls ---
+. qui ivregress 2sls orig_dv elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bo3 = e(b)
+
+. matrix Vo3 = e(V)
+
+. 
+. qui ivregress 2sls new_dv elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bn3 = e(b)
+
+. matrix Vn3 = e(V)
+
+. 
+. qui ivregress 2sls llm_dv elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bl3 = e(b)
+
+. matrix Vl3 = e(V)
+
+. 
+. * --- Model 4: "All relevant" DV, same IV structure ---
+. qui ivregress 2sls orig_dv_all elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bo4 = e(b)
+
+. matrix Vo4 = e(V)
+
+. 
+. qui ivregress 2sls new_dv_all elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bn4 = e(b)
+
+. matrix Vn4 = e(V)
+
+. 
+. qui ivregress 2sls llm_dv_all elected bonus_increase pdum2 pdum3 ///
+>     (lag_min_effort = iv_max_min46 iv_avg_min16), vce(cluster global_group)
+
+. matrix Bl4 = e(b)
+
+. matrix Vl4 = e(V)
+
+. 
+. capture program drop get_coef
+
+. program define get_coef, rclass
+  1.     args bmat vmat ivname
+  2.     local i = colnumb(`bmat', "`ivname'")
+  3.     local b = `bmat'[1, `i']
+  4.     local v = `vmat'[`i', `i']
+  5.     local se = sqrt(`v')
+  6.     local z  = `b' / `se'
+  7.     local pval = 2 * normal(-abs(`z'))
+  8.     return scalar coef = `b'
+  9.     return scalar pval = `pval'
+ 10.     local bf : display %6.3f `b'
+ 11.     if `pval' < 0.001 {
+ 12.         return local cell "`bf' (\(p{<}0.001\))"
+ 13.     }
+ 14.     else {
+ 15.         local pf : display %5.3f `pval'
+ 16.         return local cell "`bf' (\(p=`pf'\))"
+ 17.     }
+ 18. end
+
+. 
+. file write `fh' "\midrule" _n
+
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' "\multicolumn{7}{l}{\textit{Panel A: Legitimacy (\cite{BCW_MS
+> _2014})}} \\" _n
+
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' " & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\
+> )-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} 
+> & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} \\" _n
+
+. file write `fh' "\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2
+> pt}r{2pt}){4-5} \cmidrule(l){6-7}" _n
+
+. file write `fh' "\addlinespace[3pt]" _n
+
+. 
+. * --- Row 1: Elected Leader, Model 3 (DV = 1e + 2) ---
+. get_coef Bo3 Vo3 elected
+
+. local o_coef = r(coef)
+
+. local o_pval = r(pval)
+
+. coefcell `o_coef'
+
+. local o_ccell "`r(cell)'"
+
+. pcell `o_pval'
+
+. local o_pcell "`r(cell)'"
+
+. 
+. get_coef Bn3 Vn3 elected
+
+. local n_coef = r(coef)
+
+. local n_pval = r(pval)
+
+. coefcell `n_coef'
+
+. local n_ccell "`r(cell)'"
+
+. pcell `n_pval'
+
+. local n_pcell "`r(cell)'"
+
+. 
+. get_coef Bl3 Vl3 elected
+
+. local l_coef = r(coef)
+
+. local l_pval = r(pval)
+
+. coefcell `l_coef'
+
+. local l_ccell "`r(cell)'"
+
+. pcell `l_pval'
+
+. local l_pcell "`r(cell)'"
+
+. 
+. file write `fh' "Elected Leader (DV: 1e, 2) & \multicolumn{1}{c}{`o_ccell'} &
+>  \multicolumn{1}{c}{`o_pcell'} & \multicolumn{1}{c}{`n_ccell'} & \multicolumn
+> {1}{c}{`n_pcell'} & \multicolumn{1}{c}{`l_ccell'} & \multicolumn{1}{c}{`l_pce
+> ll'} \\" _n
+
+. 
+. * --- Row 2: Elected Leader, Model 4 (DV = All relevant) ---
+. get_coef Bo4 Vo4 elected
+
+. local o_coef = r(coef)
+
+. local o_pval = r(pval)
+
+. coefcell `o_coef'
+
+. local o_ccell "`r(cell)'"
+
+. pcell `o_pval'
+
+. local o_pcell "`r(cell)'"
+
+. 
+. get_coef Bn4 Vn4 elected
+
+. local n_coef = r(coef)
+
+. local n_pval = r(pval)
+
+. coefcell `n_coef'
+
+. local n_ccell "`r(cell)'"
+
+. pcell `n_pval'
+
+. local n_pcell "`r(cell)'"
+
+. 
+. get_coef Bl4 Vl4 elected
+
+. local l_coef = r(coef)
+
+. local l_pval = r(pval)
+
+. coefcell `l_coef'
+
+. local l_ccell "`r(cell)'"
+
+. pcell `l_pval'
+
+. local l_pcell "`r(cell)'"
+
+. 
+. file write `fh' "Elected Leader (DV: All relevant) & \multicolumn{1}{c}{`o_cc
+> ell'} & \multicolumn{1}{c}{`o_pcell'} & \multicolumn{1}{c}{`n_ccell'} & \mult
+> icolumn{1}{c}{`n_pcell'} & \multicolumn{1}{c}{`l_ccell'} & \multicolumn{1}{c}
+> {`l_pcell'} \\" _n
+
+. 
+. 
+. * ===========================================================================
+. * PANEL B: PROMISES
+. * ===========================================================================
+. * For each (coder, outcome): one-tailed two-proportion z-test of P-rate vs NP
+> -rate.
+. * Original RA values are hardcoded to the paper's published Table III pooled 
+> row;
+. * the underlying counts match exactly (only 30/48 rounds differently: paper 6
+> 2%, Stata 63%).
+. 
+. * Build promise indicators from master (Promises, category=Promise)
+. use `master', clear
+
+. keep if study == "Promises" & category == "Promise"
+(585,900 observations deleted)
+
+. 
+. * Original RA = Author (single coder, no aggregation)
+. preserve
+
+.     keep if coder_type == "Human" & encoder == "Author"
+(4,368 observations deleted)
+
+.     keep episode_id label
+
+.     rename label orig_promise
+
+.     tempfile origP
+
+.     save `origP'
+file /tmp/claude-501/St22926.00000f saved as .dta format
+
+. restore
+
+. 
+. * New RA = majority median of H1, H2, H3
+. preserve
+
+.     keep if coder_type == "Human" & inlist(encoder, "H1", "H2", "H3")
+(4,186 observations deleted)
+
+.     collapse (median) label, by(episode_id)
+
+.     gen new_promise = (label >= 0.5)
+
+.     keep episode_id new_promise
+
+.     tempfile newP
+
+.     save `newP'
+file /tmp/claude-501/St22926.00000h saved as .dta format
+
+. restore
+
+. 
+. * LLM Base = majority median of all (LLM × run) cells under llm_version=="Bas
+> e"
+. preserve
+
+.     keep if coder_type == "LLM" & llm_version == "Base"
+(3,094 observations deleted)
+
+.     collapse (median) label, by(episode_id)
+
+.     gen llm_promise = (label >= 0.5)
+
+.     keep episode_id llm_promise
+
+.     tempfile llmP
+
+.     save `llmP'
+file /tmp/claude-501/St22926.00000j saved as .dta format
+
+. restore
+
+. 
+. * Behavioral outcomes (a_in, b_roll, inroll) from master Promises rows.
+. * Each Episode has a single (A, B) — take it from any row (use Author rows fo
+> r simplicity).
+. use `master', clear
+
+. keep if study == "Promises" & coder_type == "Human" & encoder == "Author" & c
+> ategory == "Promise"
+(590,268 observations deleted)
+
+. keep episode_id a b
+
+. gen a_in   = (a == "In")
+
+. gen b_roll = (b == "R")
+
+. gen inroll = (a_in == 1 & b_roll == 1)
+
+. drop a b
+
+. 
+. merge 1:1 episode_id using `origP', nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                                91  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `newP',  nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                                91  
+    -----------------------------------------
+
+. merge 1:1 episode_id using `llmP',  nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                                91  
+    -----------------------------------------
+
+. foreach v in orig_promise new_promise llm_promise {
+  2.     replace `v' = 0 if `v' == .
+  3. }
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+
+. 
+. * Helper program: one-tailed two-prop test, returns formatted cell
+. capture program drop calc_cell
+
+. program define calc_cell, rclass
+  1.     args promise_col outcome
+  2.     quietly count if `promise_col' == 1
+  3.     local n_p  = r(N)
+  4.     quietly count if `promise_col' == 0
+  5.     local n_np = r(N)
+  6.     quietly count if `promise_col' == 1 & `outcome' == 1
+  7.     local x_p  = r(N)
+  8.     quietly count if `promise_col' == 0 & `outcome' == 1
+  9.     local x_np = r(N)
+ 10.     local p1 = `x_p' / `n_p'
+ 11.     local p2 = `x_np' / `n_np'
+ 12.     local pp = (`x_p' + `x_np') / (`n_p' + `n_np')
+ 13.     local se = sqrt(`pp' * (1 - `pp') * (1/`n_p' + 1/`n_np'))
+ 14.     if `se' > 0  local z = (`p1' - `p2') / `se'
+ 15.     else         local z = 0
+ 16.     local pval = 1 - normal(`z')
+ 17.     return scalar diff = `p1' - `p2'
+ 18.     return scalar pval = `pval'
+ 19.     local pct1 = round(`p1' * 100)
+ 20.     local pct2 = round(`p2' * 100)
+ 21.     return local prop "`pct1'\% vs.\ `pct2'\%"
+ 22. end
+
+. 
+. * Helper: format a p-value as a LaTeX inline-math cell string
+. * Helper: format a coefficient (3 decimals, trim leading spaces)
+. file write `fh' "\addlinespace[10pt]" _n
+
+. 
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' "\multicolumn{7}{l}{\textit{Panel B: Promises (\cite{CD_Ecta_
+> 2006})}} \\" _n
+
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' " & \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)
+> -value} & \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)-value} & 
+> \multicolumn{1}{c}{Proportion} & \multicolumn{1}{c}{\(p\)-value} \\" _n
+
+. file write `fh' "\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2
+> pt}r{2pt}){4-5} \cmidrule(l){6-7}" _n
+
+. file write `fh' "\addlinespace[3pt]" _n
+
+. 
+. foreach outcome in a_in b_roll inroll {
+  2.     if "`outcome'" == "a_in"   local outlabel "A's In Rate (P vs.\ NP)"
+  3.     if "`outcome'" == "b_roll" local outlabel "B's Roll Rate (P vs.\ NP)"
+  4.     if "`outcome'" == "inroll" local outlabel "(In, Roll) (P vs.\ NP)"
+  5. 
+.     calc_cell orig_promise `outcome'
+  6.     local o_diff = r(diff)
+  7.     local o_pval = r(pval)
+  8.     pcell `o_pval'
+  9.     local o_pcell "`r(cell)'"
+ 10.     * Override Original RA Proportion with paper's exact Table III pooled 
+> values
+.     * (only 30/48=0.625 rounds differently: paper 62%, Stata default 63%).
+.     if "`outcome'" == "a_in"   local o_prop "79\% vs.\ 37\%"
+ 11.     if "`outcome'" == "b_roll" local o_prop "79\% vs.\ 33\%"
+ 12.     if "`outcome'" == "inroll" local o_prop "62\% vs.\ 14\%"
+ 13. 
+.     calc_cell new_promise `outcome'
+ 14.     local n_prop "`r(prop)'"
+ 15.     local n_diff = r(diff)
+ 16.     local n_pval = r(pval)
+ 17.     pcell `n_pval'
+ 18.     local n_pcell "`r(cell)'"
+ 19. 
+.     calc_cell llm_promise `outcome'
+ 20.     local l_prop "`r(prop)'"
+ 21.     local l_diff = r(diff)
+ 22.     local l_pval = r(pval)
+ 23.     pcell `l_pval'
+ 24.     local l_pcell "`r(cell)'"
+ 25. 
+.     file write `fh' "`outlabel' & \multicolumn{1}{c}{`o_prop'} & \multicolumn
+> {1}{c}{`o_pcell'} & \multicolumn{1}{c}{`n_prop'} & \multicolumn{1}{c}{`n_pcel
+> l'} & \multicolumn{1}{c}{`l_prop'} & \multicolumn{1}{c}{`l_pcell'} \\" _n
+ 26. }
+
+. 
+. 
+. * ===========================================================================
+. * PANEL C: TIMING (regression of MWC outcome on 7 communication-content IVs)
+. * ===========================================================================
+. * Built entirely from master_dataset.csv: derive mwc_outcome from Shares,
+. * session_id from Episode_ID's first token (treatment), and aggregate
+. * coder × sender × category indicators in Stata.
+. 
+. use `master', clear
+
+. keep if study == "Timing"
+(271,833 observations deleted)
+
+. destring label, replace force
+label already numeric; no replace
+
+. destring share1 share2 share3, replace force
+share1: all characters numeric; replaced as byte
+share2: all characters numeric; replaced as byte
+share3: all characters numeric; replaced as byte
+
+. 
+. * Map Timing display names back to Stata-safe tokens for reshape wide
+. replace category = "MWC" if category == "Minimum Winning Coalition"
+(91,027 real changes made)
+
+. replace category = "All_way_split" if category == "All-way split"
+(91,027 real changes made)
+
+. replace category = "Compete" if category == "Competition"
+(91,027 real changes made)
+
+. replace category = "Future_coalition" if category == "Future Coalition"
+(45,445 real changes made)
+
+. 
+. * Strip identity from episode_id to get base_key = "treatment_period_group_ro
+> und"
+. gen base_key = substr(episode_id, 1, strrpos(episode_id, "_")-1)
+
+. 
+. * Derive session_id from treatment (first token of base_key)
+. gen timing_treatment = real(substr(base_key, 1, strpos(base_key, "_")-1))
+
+. gen session_id = 1 if timing_treatment == 2
+(159,016 missing values generated)
+
+. replace session_id = 2 if timing_treatment == 8
+(62,504 real changes made)
+
+. replace session_id = 3 if timing_treatment == 9
+(57,668 real changes made)
+
+. replace session_id = 4 if timing_treatment == 10
+(38,844 real changes made)
+
+. 
+. * Build per-coder aggregates: first MAX across identity (chat windows),
+. * then MEDIAN across raters, then wide pivot to per-episode (base_key) IVs.
+. 
+. * === Old Human (Juan/Bevan/Tereza) ===
+. preserve
+
+.     keep if coder_type == "Human" & inlist(encoder, "Juan", "Bevan", "Tereza"
+> )
+(304,264 observations deleted)
+
+.     * Collapse V1/V2 into Voter role
+.     gen role = "Proposer" if sender == "P"
+(8,337 missing values generated)
+
+.     replace role = "Voter" if inlist(sender, "V1", "V2")
+(8,337 real changes made)
+
+.     * Step 1: within each rater, MAX across (identity AND V1/V2 for Voter)
+.     collapse (max) label, by(encoder base_key role category)
+
+.     * Step 2: across raters, median (majority vote)
+.     collapse (median) label, by(base_key role category)
+
+.     gen lab01 = (label >= 0.5)
+
+.     keep base_key role category lab01
+
+.     reshape wide lab01, i(base_key category) j(role) string
+(j = Proposer Voter)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            2,329   ->   1,209       
+Number of variables                   4   ->   4           
+j variable (2 values)              role   ->   (dropped)
+xij variables:
+                                  lab01   ->   lab01Proposer lab01Voter
+-----------------------------------------------------------------------------
+
+.     foreach v in lab01Proposer lab01Voter {
+  2.         capture confirm variable `v'
+  3.         if _rc gen `v' = .
+  4.     }
+
+.     gen proposer = lab01Proposer
+(89 missing values generated)
+
+.     gen voter    = lab01Voter
+
+.     keep base_key category proposer voter
+
+.     reshape wide proposer voter, i(base_key) j(category) string
+(j = All_way_split Compete Future_coalition MWC)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            1,209   ->   339         
+Number of variables                   4   ->   9           
+j variable (4 values)          category   ->   (dropped)
+xij variables:
+                               proposer   ->   proposerAll_way_split proposerCo
+> mpete ... proposerMWC
+                                  voter   ->   voterAll_way_split voterCompete 
+> ... voterMWC
+-----------------------------------------------------------------------------
+
+.     rename proposerMWC              ho_mwc_proposer
+
+.     rename voterMWC                 ho_mwc_voter
+
+.     rename proposerAll_way_split    ho_all_way_split_proposer
+
+.     rename voterAll_way_split       ho_all_way_split_voter
+
+.     rename proposerCompete          ho_compete_proposer
+
+.     rename voterCompete             ho_compete_voter
+
+.     rename voterFuture_coalition    ho_future_coalition_voter
+
+.     capture drop proposerFuture_coalition
+
+.     keep base_key ho_*
+
+.     tempfile ho_wide
+
+.     save `ho_wide'
+file /tmp/claude-501/St22926.00000l saved as .dta format
+
+. restore
+
+. 
+. * === New Human (Abboud/Rylee/Samuel) ===
+. preserve
+
+.     keep if coder_type == "Human" & inlist(encoder, "Abboud", "Rylee", "Samue
+> l")
+(304,264 observations deleted)
+
+.     gen role = "Proposer" if sender == "P"
+(8,337 missing values generated)
+
+.     replace role = "Voter" if inlist(sender, "V1", "V2")
+(8,337 real changes made)
+
+.     collapse (max) label, by(encoder base_key role category)
+
+.     collapse (median) label, by(base_key role category)
+
+.     gen lab01 = (label >= 0.5)
+
+.     keep base_key role category lab01
+
+.     reshape wide lab01, i(base_key category) j(role) string
+(j = Proposer Voter)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            2,329   ->   1,209       
+Number of variables                   4   ->   4           
+j variable (2 values)              role   ->   (dropped)
+xij variables:
+                                  lab01   ->   lab01Proposer lab01Voter
+-----------------------------------------------------------------------------
+
+.     foreach v in lab01Proposer lab01Voter {
+  2.         capture confirm variable `v'
+  3.         if _rc gen `v' = .
+  4.     }
+
+.     gen proposer = lab01Proposer
+(89 missing values generated)
+
+.     gen voter    = lab01Voter
+
+.     keep base_key category proposer voter
+
+.     reshape wide proposer voter, i(base_key) j(category) string
+(j = All_way_split Compete Future_coalition MWC)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            1,209   ->   339         
+Number of variables                   4   ->   9           
+j variable (4 values)          category   ->   (dropped)
+xij variables:
+                               proposer   ->   proposerAll_way_split proposerCo
+> mpete ... proposerMWC
+                                  voter   ->   voterAll_way_split voterCompete 
+> ... voterMWC
+-----------------------------------------------------------------------------
+
+.     rename proposerMWC              hn_mwc_proposer
+
+.     rename voterMWC                 hn_mwc_voter
+
+.     rename proposerAll_way_split    hn_all_way_split_proposer
+
+.     rename voterAll_way_split       hn_all_way_split_voter
+
+.     rename proposerCompete          hn_compete_proposer
+
+.     rename voterCompete             hn_compete_voter
+
+.     rename voterFuture_coalition    hn_future_coalition_voter
+
+.     capture drop proposerFuture_coalition
+
+.     keep base_key hn_*
+
+.     tempfile hn_wide
+
+.     save `hn_wide'
+file /tmp/claude-501/St22926.00000n saved as .dta format
+
+. restore
+
+. 
+. * === LLM Base (hierarchical) ===
+. *   - Within each (LLM × run): max across (identity AND V1/V2 for Voter)
+. *   - Across 5 runs within each LLM: median
+. *   - Across 3 LLMs: median
+. preserve
+
+.     keep if coder_type == "LLM" & llm_version == "Base"
+(247,216 observations deleted)
+
+.     gen role = "Proposer" if sender == "P"
+(41,685 missing values generated)
+
+.     replace role = "Voter" if inlist(sender, "V1", "V2")
+(41,685 real changes made)
+
+.     collapse (max) label, by(encoder llm_run base_key role category)    // st
+> ep 1a: max within rater
+
+.     collapse (median) label, by(encoder base_key role category)          // s
+> tep 1b: median across 5 runs
+
+.     collapse (median) label, by(base_key role category)                   // 
+> step 2: median across 3 LLMs
+
+.     gen lab01 = (label >= 0.5)
+
+.     keep base_key role category lab01
+
+.     reshape wide lab01, i(base_key category) j(role) string
+(j = Proposer Voter)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            2,329   ->   1,209       
+Number of variables                   4   ->   4           
+j variable (2 values)              role   ->   (dropped)
+xij variables:
+                                  lab01   ->   lab01Proposer lab01Voter
+-----------------------------------------------------------------------------
+
+.     foreach v in lab01Proposer lab01Voter {
+  2.         capture confirm variable `v'
+  3.         if _rc gen `v' = .
+  4.     }
+
+.     gen proposer = lab01Proposer
+(89 missing values generated)
+
+.     gen voter    = lab01Voter
+
+.     keep base_key category proposer voter
+
+.     reshape wide proposer voter, i(base_key) j(category) string
+(j = All_way_split Compete Future_coalition MWC)
+
+Data                               Long   ->   Wide
+-----------------------------------------------------------------------------
+Number of observations            1,209   ->   339         
+Number of variables                   4   ->   9           
+j variable (4 values)          category   ->   (dropped)
+xij variables:
+                               proposer   ->   proposerAll_way_split proposerCo
+> mpete ... proposerMWC
+                                  voter   ->   voterAll_way_split voterCompete 
+> ... voterMWC
+-----------------------------------------------------------------------------
+
+.     rename proposerMWC              l_mwc_proposer
+
+.     rename voterMWC                 l_mwc_voter
+
+.     rename proposerAll_way_split    l_all_way_split_proposer
+
+.     rename voterAll_way_split       l_all_way_split_voter
+
+.     rename proposerCompete          l_compete_proposer
+
+.     rename voterCompete             l_compete_voter
+
+.     rename voterFuture_coalition    l_future_coalition_voter
+
+.     capture drop proposerFuture_coalition
+
+.     keep base_key l_*
+
+.     tempfile l_wide
+
+.     save `l_wide'
+file /tmp/claude-501/St22926.00000p saved as .dta format
+
+. restore
+
+. 
+. * Build the Timing analysis dataset: one row per base_key
+. keep base_key session_id share1 share2 share3
+
+. duplicates drop base_key, force
+
+Duplicates in terms of base_key
+
+(318,160 observations deleted)
+
+. 
+. * MWC outcome from shares: 1 if any of Share1/2/3 == 0
+. gen mwc_outcome = (share1 == 0 | share2 == 0 | share3 == 0)
+
+. 
+. merge 1:1 base_key using `ho_wide', nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            27
+        from master                        27  
+        from using                          0  
+
+    Matched                               339  
+    -----------------------------------------
+
+. merge 1:1 base_key using `hn_wide', nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            27
+        from master                        27  
+        from using                          0  
+
+    Matched                               339  
+    -----------------------------------------
+
+. merge 1:1 base_key using `l_wide',  nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                            27
+        from master                        27  
+        from using                          0  
+
+    Matched                               339  
+    -----------------------------------------
+
+. 
+. * Some communication-content cells will be . (no codings for that sender-cate
+> gory in this episode);
+. * fill with 0 (no message of that type)
+. foreach pref in ho hn l {
+  2.     foreach v in mwc_proposer mwc_voter all_way_split_proposer all_way_spl
+> it_voter ///
+>                  compete_proposer compete_voter future_coalition_voter {
+  3.         replace `pref'_`v' = 0 if `pref'_`v' == .
+  4.     }
+  5. }
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(144 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(144 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(37 real changes made)
+(144 real changes made)
+
+. 
+. * Run the three regressions
+. qui reg mwc_outcome ho_mwc_proposer ho_mwc_voter ho_all_way_split_proposer ho
+> _all_way_split_voter ///
+>         ho_compete_proposer ho_compete_voter ho_future_coalition_voter, vce(c
+> luster session_id)
+
+. matrix Bo = e(b)
+
+. matrix Vo = e(V)
+
+. local df_o = e(df_r)
+
+. 
+. qui reg mwc_outcome hn_mwc_proposer hn_mwc_voter hn_all_way_split_proposer hn
+> _all_way_split_voter ///
+>         hn_compete_proposer hn_compete_voter hn_future_coalition_voter, vce(c
+> luster session_id)
+
+. matrix Bn = e(b)
+
+. matrix Vn = e(V)
+
+. local df_n = e(df_r)
+
+. 
+. qui reg mwc_outcome l_mwc_proposer l_mwc_voter l_all_way_split_proposer l_all
+> _way_split_voter ///
+>         l_compete_proposer l_compete_voter l_future_coalition_voter, vce(clus
+> ter session_id)
+
+. matrix Bl = e(b)
+
+. matrix Vl = e(V)
+
+. local df_l = e(df_r)
+
+. 
+. capture program drop get_coef_t
+
+. program define get_coef_t, rclass
+  1.     args bmat vmat df ivname
+  2.     local i = colnumb(`bmat', "`ivname'")
+  3.     local b = `bmat'[1, `i']
+  4.     local v = `vmat'[`i', `i']
+  5.     local se = sqrt(`v')
+  6.     local t  = `b' / `se'
+  7.     local pval = 2 * ttail(`df', abs(`t'))
+  8.     return scalar coef = `b'
+  9.     return scalar pval = `pval'
+ 10.     local bf : display %6.3f `b'
+ 11.     if `pval' < 0.001 {
+ 12.         return local cell "`bf' (\(p{<}0.001\))"
+ 13.     }
+ 14.     else {
+ 15.         local pf : display %5.3f `pval'
+ 16.         return local cell "`bf' (\(p=`pf'\))"
+ 17.     }
+ 18. end
+
+. 
+. file write `fh' "\addlinespace[10pt]" _n
+
+. file write `fh' "\midrule" _n
+
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' "\multicolumn{7}{l}{\textit{Panel C: Timing (\cite{BH_JEP_202
+> 3})}} \\" _n
+
+. file write `fh' "\addlinespace[4pt]" _n
+
+. file write `fh' " & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\
+> )-value} & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} 
+> & \multicolumn{1}{c}{Coefficient} & \multicolumn{1}{c}{\(p\)-value} \\" _n
+
+. file write `fh' "\cmidrule(r){1-1} \cmidrule(l{2pt}r{2pt}){2-3} \cmidrule(l{2
+> pt}r{2pt}){4-5} \cmidrule(l){6-7}" _n
+
+. file write `fh' "\addlinespace[3pt]" _n
+
+. 
+. foreach iv_suffix in mwc_proposer mwc_voter all_way_split_proposer all_way_sp
+> lit_voter compete_proposer compete_voter future_coalition_voter {
+  2.     if "`iv_suffix'" == "mwc_proposer"            local ivlabel "MWC \(\ti
+> mes\) Proposer"
+  3.     if "`iv_suffix'" == "mwc_voter"               local ivlabel "MWC \(\ti
+> mes\) Voter"
+  4.     if "`iv_suffix'" == "all_way_split_proposer"  local ivlabel "3-Way Spl
+> it \(\times\) Proposer"
+  5.     if "`iv_suffix'" == "all_way_split_voter"     local ivlabel "3-Way Spl
+> it \(\times\) Voter"
+  6.     if "`iv_suffix'" == "compete_proposer"        local ivlabel "Competiti
+> on \(\times\) Proposer"
+  7.     if "`iv_suffix'" == "compete_voter"           local ivlabel "Competiti
+> on \(\times\) Voter"
+  8.     if "`iv_suffix'" == "future_coalition_voter"  local ivlabel "Future Co
+> alition \(\times\) Voter"
+  9. 
+.     get_coef_t Bo Vo `df_o' ho_`iv_suffix'
+ 10.     local o_coef = r(coef)
+ 11.     local o_pval = r(pval)
+ 12.     coefcell `o_coef'
+ 13.     local o_ccell "`r(cell)'"
+ 14.     pcell `o_pval'
+ 15.     local o_pcell "`r(cell)'"
+ 16. 
+.     get_coef_t Bn Vn `df_n' hn_`iv_suffix'
+ 17.     local n_coef = r(coef)
+ 18.     local n_pval = r(pval)
+ 19.     coefcell `n_coef'
+ 20.     local n_ccell "`r(cell)'"
+ 21.     pcell `n_pval'
+ 22.     local n_pcell "`r(cell)'"
+ 23. 
+.     get_coef_t Bl Vl `df_l' l_`iv_suffix'
+ 24.     local l_coef = r(coef)
+ 25.     local l_pval = r(pval)
+ 26.     coefcell `l_coef'
+ 27.     local l_ccell "`r(cell)'"
+ 28.     pcell `l_pval'
+ 29.     local l_pcell "`r(cell)'"
+ 30. 
+.     file write `fh' "`ivlabel' & \multicolumn{1}{c}{`o_ccell'} & \multicolumn
+> {1}{c}{`o_pcell'} & \multicolumn{1}{c}{`n_ccell'} & \multicolumn{1}{c}{`n_pce
+> ll'} & \multicolumn{1}{c}{`l_ccell'} & \multicolumn{1}{c}{`l_pcell'} \\" _n
+ 31. }
+
+. 
+. 
+. * ===========================================================================
+. * FINISH TABLE
+. * ===========================================================================
+. file write `fh' "\bottomrule" _n
+
+. file write `fh' "\end{tabular}" _n
+
+. file write `fh' "}" _n
+
+. file write `fh' "\vspace{8pt}" _n
+
+. file write `fh' "\begin{tablenotes}[flushleft]\footnotesize" _n
+
+. file write `fh' "\setlength{\itemsep}{6pt}" _n
+
+. file write `fh' "\item \textbf{Panel B (Promises):} \textit{Proportion} = rat
+> e of the outcome among Promise-coded vs.\ No-Promise-coded episodes. \(p\)-va
+> lue is from a one-tailed two-proportion \(z\)-test." _n
+
+. file write `fh' "\item \textbf{Panel A (Legitimacy):} The \(p\)-value is the 
+> two-tailed \(p\)-value on Elected Leader in the 2SLS regression of Models 3 a
+> nd 4 of Table 6 (the two rows differ only in the dependent variable)." _n
+
+. file write `fh' "\item \textbf{Panel C (Timing):} The \(p\)-value is the two-
+> tailed \(p\)-value on the row's independent variable in the OLS regression of
+>  the MWC-outcome indicator corresponding to the analysis behind Figure 5 of \
+> cite{BH_JEP_2023}." _n
+
+. file write `fh' "\end{tablenotes}" _n
+
+. file write `fh' "\end{threeparttable}" _n
+
+. file write `fh' "\end{table}" _n
+
+. file close `fh'
+
+. 
+. display as result "=== Wrote comparison_table.tex ==="
+=== Wrote comparison_table.tex ===
+
+. 
+. * --- Compile .tex -> JPG ---
+. file open fh using "_wrap.tex", write replace
+(file _wrap.tex not found)
+
+. file write fh "\documentclass[11pt]{article}" _n
+
+. file write fh "\usepackage[margin=0.4in,landscape]{geometry}" _n
+
+. file write fh "\usepackage{graphicx}" _n
+
+. file write fh "\usepackage{booktabs}" _n
+
+. file write fh "\usepackage{amsmath}" _n
+
+. file write fh "\usepackage{amssymb}" _n
+
+. file write fh "\usepackage[flushleft]{threeparttable}" _n
+
+. file write fh "\pagestyle{empty}" _n
+
+. file write fh "\usepackage{etoolbox}" _n
+
+. file write fh "\renewcommand{\cite}[1]{\ifstrequal{#1}{CD_Ecta_2006}{Charness
+>  \& Dufwenberg, 2011}{\ifstrequal{#1}{BCW_MS_2014}{Brandts, Cooper \& Weber, 
+> 2014}{\ifstrequal{#1}{BH_JEP_2023}{Baranski \& Haas, 2023}{[#1]}}}}" _n
+
+. file write fh "\begin{document}" _n
+
+. file write fh "\input{comparison_table.tex}" _n
+
+. file write fh "\end{document}" _n
+
+. file close fh
+
+. !/Library/TeX/texbin/pdflatex -interaction=nonstopmode -halt-on-error _wrap.t
+> ex > /dev/null 2>&1
+
+
+. !python3 -c "import fitz; doc=fitz.open('_wrap.pdf'); pix=doc[0].get_pixmap(d
+> pi=200); pix.save('_tmp.png'); from PIL import Image; Image.open('_tmp.png').
+> convert('RGB').save('comparison_table.jpg','JPEG',quality=95); import os; os.
+> remove('_tmp.png')" 2>/dev/null
+
+
+. !rm -f _wrap.tex _wrap.aux _wrap.log _wrap.pdf
+
+
+. !xattr -cr comparison_table.jpg 2>/dev/null
+
+
+. 
+. display as result "=== Done ==="
+=== Done ===
+
+. log close
+      name:  <unnamed>
+       log:  /Users/thet/Desktop/RA_SSEL_2025-26/Projects/SSEL_LLM/GITHUB/analy
+> sis/LLM_Baseline/extended/comparison_table.log
+  log type:  text
+ closed on:   4 Jun 2026, 16:47:34
+-------------------------------------------------------------------------------

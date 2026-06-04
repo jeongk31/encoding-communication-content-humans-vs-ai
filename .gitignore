@@ -1,0 +1,25 @@
+# Secrets — never commit real keys
+.env
+*/.env
+**/.env
+
+# OS / editor cruft
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.venv*/
+venv/
+.ipynb_checkpoints/
+
+# Archives / bulky originals (kept out of the repo)
+*.zip
+
+# LaTeX build intermediates (generated when rendering tables/figures)
+_wrap.*
+*.aux
+*.synctex.gz

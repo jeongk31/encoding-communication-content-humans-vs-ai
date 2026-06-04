@@ -1,0 +1,52 @@
+\begin{landscape}
+\thispagestyle{empty}
+\centering
+\vspace*{\fill}
+\renewcommand{\arraystretch}{0.75}
+\small
+\begin{threeparttable}
+\captionof{table}{Experimental Behavior and Communication Content: Replicating Statistical Analyses with Different Codings}
+\label{tab:cross-study-replication}
+\begin{tabular}{l@{\hskip 20pt} ccc @{\hskip 20pt} cc @{\hskip 20pt} cc}
+\toprule
+\textbf{Outcome} & \multicolumn{3}{c}{\textbf{$p$-value}} & \multicolumn{2}{c}{\textbf{Match Sign}} & \multicolumn{2}{c}{\textbf{Match Significance}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+ & Original & RA-based & LLM-based & Original--RA & RA--LLM & Original--RA & RA--LLM \\
+\midrule
+\addlinespace[4pt]
+\multicolumn{8}{l}{\textit{Panel A: Legitimacy (\cite{BCW_MS_2014})}} \\
+\addlinespace[2pt]
+\cmidrule(lr){1-1} \cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+\addlinespace[3pt]
+Elected Leader (DV: Use 40) & $p=0.004$ & $p=0.030$ & $p=0.006$ & Yes & Yes & Yes & Yes \\
+Elected Leader (DV: Relevant) & $p=0.050$ & $p=0.037$ & $p=0.058$ & Yes & Yes & Yes & Yes \\
+\addlinespace[10pt]
+\multicolumn{8}{l}{\textit{Panel B: Promises (\cite{CD_Ecta_2006})}} \\
+\addlinespace[2pt]
+\cmidrule(lr){1-1} \cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+\addlinespace[3pt]
+A's In Rate (P vs.\ NP) & $p{<}0.001$ & $p=0.003$ & $p{<}0.001$ & Yes & Yes & Yes & Yes \\
+B's Roll Rate (P vs.\ NP) & $p{<}0.001$ & $p{<}0.001$ & $p{<}0.001$ & Yes & Yes & Yes & Yes \\
+(In, Roll) (P vs.\ NP) & $p{<}0.001$ & $p{<}0.001$ & $p{<}0.001$ & Yes & Yes & Yes & Yes \\
+\addlinespace[10pt]
+\multicolumn{8}{l}{\textit{Panel C: Timing (\cite{BH_JEP_2023})}} \\
+\addlinespace[2pt]
+\cmidrule(lr){1-1} \cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+\addlinespace[3pt]
+MWC $\times$ Proposer & $p=0.014$ & $p=0.007$ & $p=0.004$ & Yes & Yes & Yes & Yes \\
+MWC $\times$ Voter & $p=0.036$ & $p=0.381$ & $p=0.043$ & Yes & Yes & No & No \\
+3-Way Split $\times$ Proposer & $p{<}0.001$ & $p=0.004$ & $p=0.015$ & Yes & Yes & Yes & Yes \\
+3-Way Split $\times$ Voter & $p=0.182$ & $p=0.131$ & $p=0.181$ & Yes & Yes & Yes & Yes \\
+Competition $\times$ Proposer & $p=0.861$ & $p=0.012$ & $p=0.251$ & Yes & Yes & No & No \\
+Competition $\times$ Voter & $p=0.403$ & $p=0.008$ & $p=0.003$ & No & Yes & No & Yes \\
+Future Coalition $\times$ Voter & $p=0.816$ & $p=0.326$ & $p=0.367$ & Yes & Yes & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item \textbf{Panel A (Legitimacy):} The $p$-value is the two-tailed $p$-value for Elected Leader in the 2SLS regressions of Models 3 and 4 of Table 6.
+\item \textbf{Panel B (Promises):} The $p$-value comes from a one-tailed two-proportion $z$-test comparing the rate of each behavioral outcome between Promise-coded and No-Promise-coded episodes. The tests correspond to the third row (\textquotedblleft Pooled\textquotedblright) of Table III. For Promises the LLM column uses the Base prompt, as no guidance variant exists for this study.
+\item \textbf{Panel C (Timing):} The $p$-value is the two-tailed $p$-value on the row's independent variable in the OLS regression of the MWC-outcome indicator corresponding to the analysis behind Figure 5.
+\end{tablenotes}
+\end{threeparttable}
+\end{landscape}

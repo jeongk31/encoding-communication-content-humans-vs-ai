@@ -2,7 +2,7 @@
 *! Reads ONLY master_dataset.csv from the current directory.
 *!
 *! Layout: 7 columns total.
-*!   Top header:  Outcome | Original RA (2 sub) | New RA (2 sub) | LLM Base (2 sub)
+*!   Top header:  Outcome | Original RA (2 sub) | New RA (2 sub) | LLM baseline (2 sub)
 *!   Sub-headers (repeated per panel, since the magnitude metric differs):
 *!     Panel A:  Proportion | p-value | Proportion | p-value | Proportion | p-value
 *!     Panel B:  Coefficient | p-value | Coefficient | p-value | Coefficient | p-value
@@ -114,9 +114,9 @@ preserve
     save `newDV'
 restore
 
-* LLM Base DV: hierarchical median (within-LLM across runs, then across LLMs)
+* LLM baseline DV: hierarchical median (within-LLM across runs, then across LLMs)
 preserve
-    keep if (coder_type == "LLM" & llm_version == "Base" & inlist(category, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
+    keep if (coder_type == "LLM" & llm_version == "baseline" & inlist(category, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
     collapse (median) label, by(episode_id category encoder)   // step 1: across 5 runs
     collapse (median) label, by(episode_id category)            // step 2: across 3 LLMs
     gen maj = (label >= 0.5)
@@ -154,9 +154,9 @@ preserve
     save `newDVall'
 restore
 
-* LLM Base DV-All (hierarchical median, any non-banter category mentioned)
+* LLM baseline DV-All (hierarchical median, any non-banter category mentioned)
 preserve
-    keep if (coder_type == "LLM" & llm_version == "Base" & category != "6") ///
+    keep if (coder_type == "LLM" & llm_version == "baseline" & category != "6") ///
          | (is_encoded == "0" & category != "6")
     collapse (median) label, by(episode_id category encoder)
     collapse (median) label, by(episode_id category)
@@ -329,9 +329,9 @@ preserve
     save `newP'
 restore
 
-* LLM Base = majority median of all (LLM × run) cells under llm_version=="Base"
+* LLM baseline = majority median of all (LLM × run) cells under llm_version=="baseline"
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     collapse (median) label, by(episode_id)
     gen llm_promise = (label >= 0.5)
     keep episode_id llm_promise
@@ -523,12 +523,12 @@ preserve
     save `hn_wide'
 restore
 
-* === LLM Base (hierarchical) ===
+* === LLM baseline (hierarchical) ===
 *   - Within each (LLM × run): max across (identity AND V1/V2 for Voter)
 *   - Across 5 runs within each LLM: median
 *   - Across 3 LLMs: median
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     gen role = "Proposer" if sender == "P"
     replace role = "Voter" if inlist(sender, "V1", "V2")
     collapse (max) label, by(encoder llm_run base_key role category)    // step 1a: max within rater

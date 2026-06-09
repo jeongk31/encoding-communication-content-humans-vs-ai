@@ -329,9 +329,9 @@ preserve
     save `newP'
 restore
 
-* LLM Base = majority median of all (LLM × run) cells under llm_version=="Base"
+* LLM baseline = majority median of all (LLM × run) cells under llm_version=="baseline"
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     collapse (median) label, by(episode_id)
     gen llm_promise = (label >= 0.5)
     keep episode_id llm_promise
@@ -673,7 +673,7 @@ file write `fh' "}" _n
 file write `fh' "\vspace{8pt}" _n
 file write `fh' "\begin{tablenotes}[flushleft]\footnotesize" _n
 file write `fh' "\setlength{\itemsep}{6pt}" _n
-file write `fh' "\item \textbf{Panel B (Promises):} \textit{Proportion} = rate of the outcome among Promise-coded vs.\ No-Promise-coded episodes. \(p\)-value is from a one-tailed two-proportion \(z\)-test. For Promises the LLM column uses the Base prompt, as no guidance variant exists for this study." _n
+file write `fh' "\item \textbf{Panel B (Promises):} \textit{Proportion} = rate of the outcome among Promise-coded vs.\ No-Promise-coded episodes. \(p\)-value is from a one-tailed two-proportion \(z\)-test. For Promises the LLM column uses the baseline prompt, as no guidance variant exists for this study." _n
 file write `fh' "\item \textbf{Panel A (Legitimacy):} The \(p\)-value is the two-tailed \(p\)-value on Elected Leader in the 2SLS regression of Models 3 and 4 of Table 6 (the two rows differ only in the dependent variable)." _n
 file write `fh' "\item \textbf{Panel C (Timing):} The \(p\)-value is the two-tailed \(p\)-value on the row's independent variable in the OLS regression of the MWC-outcome indicator corresponding to the analysis behind Figure 5 of \cite{BH_JEP_2023}." _n
 file write `fh' "\end{tablenotes}" _n

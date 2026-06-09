@@ -4,7 +4,7 @@
 *!                  | Match Significance (Original-RA, RA-LLM)
 *! Panel A = Legitimacy Models 3 & 4 (Elected Leader: Use 40 / Relevant)
 *! Panel B = Promises (3 behavioral outcomes); Panel C = Timing (7 IVs).
-*! LLM column = llm_version "Base" this is the LLM Guidance table; Promises falls back to Base (no guidance variant).
+*! LLM column = llm_version "baseline" this is the LLM Guidance table; Promises falls back to baseline (no guidance variant).
 *! Significance for "Match Significance" uses the p < 0.10 threshold.
 *! Reads ONLY ../../../master_dataset.csv. Output written with \(...\); a final
 *! sed pass converts \( \) -> $ to match the paper's dollar-math style.
@@ -293,7 +293,7 @@ preserve
     save `newP'
 restore
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     collapse (median) label, by(episode_id)
     gen llm_promise = (label >= 0.5)
     keep episode_id llm_promise
@@ -502,7 +502,7 @@ file write `fh' "\end{tabular}" _n
 file write `fh' "\begin{tablenotes}[flushleft]" _n
 file write `fh' "\footnotesize" _n
 file write `fh' "\item \textbf{Panel A (Legitimacy):} The \(p\)-value is the two-tailed \(p\)-value for Elected Leader in the 2SLS regressions of Models 3 and 4 of Table 6." _n
-file write `fh' "\item \textbf{Panel B (Promises):} The \(p\)-value comes from a one-tailed two-proportion \(z\)-test comparing the rate of each behavioral outcome between Promise-coded and No-Promise-coded episodes. The tests correspond to the third row (\textquotedblleft Pooled\textquotedblright) of Table III. For Promises the LLM column uses the Base prompt, as no guidance variant exists for this study." _n
+file write `fh' "\item \textbf{Panel B (Promises):} The \(p\)-value comes from a one-tailed two-proportion \(z\)-test comparing the rate of each behavioral outcome between Promise-coded and No-Promise-coded episodes. The tests correspond to the third row (\textquotedblleft Pooled\textquotedblright) of Table III. For Promises the LLM column uses the baseline prompt, as no guidance variant exists for this study." _n
 file write `fh' "\item \textbf{Panel C (Timing):} The \(p\)-value is the two-tailed \(p\)-value on the row's independent variable in the OLS regression of the MWC-outcome indicator corresponding to the analysis behind Figure 5." _n
 file write `fh' "\end{tablenotes}" _n
 file write `fh' "\end{threeparttable}" _n

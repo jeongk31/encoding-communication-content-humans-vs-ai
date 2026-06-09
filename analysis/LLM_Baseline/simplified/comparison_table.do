@@ -4,7 +4,7 @@
 *!                  | Match Significance (Original-RA, RA-LLM)
 *! Panel A = Legitimacy Models 3 & 4 (Elected Leader: Use 40 / Relevant)
 *! Panel B = Promises (3 behavioral outcomes); Panel C = Timing (7 IVs).
-*! LLM column = llm_version "Base" (this is the LLM Baseline table).
+*! LLM column = llm_version "baseline" (this is the LLM Baseline table).
 *! Significance for "Match Significance" uses the p < 0.10 threshold.
 *! Reads ONLY ../../../master_dataset.csv. Output written with \(...\); a final
 *! sed pass converts \( \) -> $ to match the paper's dollar-math style.
@@ -172,7 +172,7 @@ preserve
     save `newDV'
 restore
 preserve
-    keep if (coder_type == "LLM" & llm_version == "Base" & inlist(category, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
+    keep if (coder_type == "LLM" & llm_version == "baseline" & inlist(category, "1e", "2")) | (is_encoded == "0" & inlist(category, "1e", "2"))
     collapse (median) label, by(episode_id category encoder)
     collapse (median) label, by(episode_id category)
     gen maj = (label >= 0.5)
@@ -203,7 +203,7 @@ preserve
     save `newDVall'
 restore
 preserve
-    keep if (coder_type == "LLM" & llm_version == "Base" & category != "6") | (is_encoded == "0" & category != "6")
+    keep if (coder_type == "LLM" & llm_version == "baseline" & category != "6") | (is_encoded == "0" & category != "6")
     collapse (median) label, by(episode_id category encoder)
     collapse (median) label, by(episode_id category)
     gen maj = (label >= 0.5)
@@ -293,7 +293,7 @@ preserve
     save `newP'
 restore
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     collapse (median) label, by(episode_id)
     gen llm_promise = (label >= 0.5)
     keep episode_id llm_promise
@@ -412,7 +412,7 @@ preserve
     save `hn_wide'
 restore
 preserve
-    keep if coder_type == "LLM" & llm_version == "Base"
+    keep if coder_type == "LLM" & llm_version == "baseline"
     gen role = "Proposer" if sender == "P"
     replace role = "Voter" if inlist(sender, "V1", "V2")
     collapse (max) label, by(encoder llm_run base_key role category)

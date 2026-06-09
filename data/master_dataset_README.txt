@@ -39,10 +39,10 @@ LLM_Run
 LLM_Version
     The prompt variant used by the LLM. Blank for human coders.
     Values:
-      - Base: LLM receives the same coding instructions as human coders.
-      - Ground Truth: LLM receives coding instructions plus ground truth
+      - baseline: LLM receives the same coding instructions as human coders.
+      - RA consensus: LLM receives coding instructions plus RA-consensus
         examples (episodes where all human coders agreed).
-      - Self Prompt: LLM generates its own coding prompt from the
+      - meta-prompt: LLM generates its own coding prompt from the
         experimental and coding instructions.
       - Guidance: LLM receives coding instructions plus period context --
         all chatgroup messages from the same session-period are supplied
